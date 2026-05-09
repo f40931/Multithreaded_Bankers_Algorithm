@@ -16,7 +16,7 @@ The system consists of a central **Banker** managing shared data structures and 
 
 **Kuan, Chin-Wei**: TBD
 
-**Cheng, Simone**: TBD
+**Cheng, Simone**: Safety algorithm (`is_safe()`), request/release logic with rollback on unsafe state.
 
 **TODO**: 
 - Core Safty Algorithm - Implement (`is_safe()`) to determine if a state leads to potential deadlock.

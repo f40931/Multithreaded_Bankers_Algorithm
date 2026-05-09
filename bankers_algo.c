@@ -17,14 +17,93 @@ int need[NUMBER_OF_CUSTOMERS][NUMBER_OF_RESOURCES];
 
 pthread_mutex_t mutex;
 
-int request_resources(int customer_num,int request[]){
-    //TODO is_safe() state
-    
-    return 0; // successful
-    return -1; // unsuccessful
+int is_safe(){
+    int work[NUMBER_OF_RESOURCES];
+    int finish[NUMBER_OF_CUSTOMERS];
+
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
+        work[i] = available[i];
+    }
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+        finish[i] = 0;
+    }
+
+    for (int count = 0; count < NUMBER_OF_CUSTOMERS; count++){
+        int found = 0;
+        for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+            if (finish[i]){
+                continue;
+            }
+
+            int can_finish = 1;
+            for (int j = 0; j < NUMBER_OF_RESOURCES; j++){
+                if (need[i][j] > work[j]){
+                    can_finish = 0;
+                    break;
+                }
+            }
+
+            if (can_finish){
+                for (int j = 0; j < NUMBER_OF_RESOURCES; j++){
+                    work[j] += allocation[i][j];
+                }
+                finish[i] = 1;
+                found = 1;
+            }
+        }
+
+        if (!found){
+            break;
+        }
+    }
+
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+        if (!finish[i]){
+            return 0;
+        }
+    }
+    return 1;
 }
+
+int request_resources(int customer_num,int request[]){
+    pthread_mutex_lock(&mutex);
+
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
+        if (request[i] > need[customer_num][i] || request[i] > available[i]){
+            pthread_mutex_unlock(&mutex);
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
+        available[i] -= request[i];
+        allocation[customer_num][i] += request[i];
+        need[customer_num][i] -= request[i];
+    }
+
+    if (is_safe()){
+        pthread_mutex_unlock(&mutex);
+        return 0;
+    }
+
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
+        available[i] += request[i];
+        allocation[customer_num][i] -= request[i];
+        need[customer_num][i] += request[i];
+    }
+
+    pthread_mutex_unlock(&mutex);
+    return -1;
+}
+
 void release_resources(int customer_num,int release[]){
-    //TODO
+    pthread_mutex_lock(&mutex);
+    for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
+        available[i] += release[i];
+        allocation[customer_num][i] -= release[i];
+        need[customer_num][i] += release[i];
+    }
+    pthread_mutex_unlock(&mutex);
 }
 
 void* customer_thread(void* arg){
@@ -35,7 +114,7 @@ void* customer_thread(void* arg){
         // 1. Create random need to reflect the real world use cases
         pthread_mutex_lock(&mutex);
         for(int i=0; i< NUMBER_OF_RESOURCES;i++){
-            if(need[customer_num]>0){
+            if(need[customer_num][i] > 0){
                 request[i]=rand() % (need[customer_num][i]+1);
             }else{
                  // need=0

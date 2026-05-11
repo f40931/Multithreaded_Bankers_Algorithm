@@ -17,6 +17,10 @@ int need[NUMBER_OF_CUSTOMERS][NUMBER_OF_RESOURCES];
 
 pthread_mutex_t mutex;
 
+/**
+ * Safety Algorithm: Determines if the current system state is safe.
+ * @return 1 if safe, 0 if unsafe.
+ */
 int is_safe(){
     int work[NUMBER_OF_RESOURCES];
     int finish[NUMBER_OF_CUSTOMERS];
@@ -65,6 +69,10 @@ int is_safe(){
     return 1;
 }
 
+/**
+ * Request Algorithm: Tentatively allocates and verifies safety.
+ * @return 0 on success, -1 if denied.
+ */
 int request_resources(int customer_num,int request[]){
     pthread_mutex_lock(&mutex);
 
@@ -96,6 +104,9 @@ int request_resources(int customer_num,int request[]){
     return -1;
 }
 
+/**
+ * Release Algorithm: Reclaims resources and updates system state.
+ */
 void release_resources(int customer_num,int release[]){
     pthread_mutex_lock(&mutex);
     for (int i = 0; i < NUMBER_OF_RESOURCES; i++){
@@ -106,6 +117,9 @@ void release_resources(int customer_num,int release[]){
     pthread_mutex_unlock(&mutex);
 }
 
+/**
+ * Simulation Thread: Mimics unpredictable customer demand.
+ */
 void* customer_thread(void* arg){
     int customer_num=*(int*)arg;
 
@@ -134,15 +148,33 @@ void* customer_thread(void* arg){
             release_resources(customer_num,request);
             printf("Customer %d: Resource released.\n",customer_num);
         }else{
+            printf("Customer %d: Request denied (unsafe).\n", customer_num);
             sleep(1); // Wait 1 second and retry
         }
     }
     return NULL;
 }
 
+/**
+ * File I/O: Populates Max Demand matrix from config file.
+ */
 void load_max_file(char *filename){
-    //TODO
-};
+FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("Error opening file");
+        exit(1);
+    }
+    for (int i = 0; i < NUMBER_OF_CUSTOMERS; i++) {
+        for (int j = 0; j < NUMBER_OF_RESOURCES; j++) {
+            if (fscanf(fp, "%d", &maximum[i][j]) != 1) break;
+            fgetc(fp); // Skip delimiter
+            
+            allocation[i][j] = 0;
+            need[i][j] = maximum[i][j];
+        }
+    }
+    fclose(fp);
+}
 
 int main(int argc, char *argv[]){
     if (argc!= NUMBER_OF_RESOURCES +1){

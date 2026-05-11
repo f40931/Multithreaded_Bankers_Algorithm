@@ -14,15 +14,9 @@ The system consists of a central **Banker** managing shared data structures and 
 
 **Chen, Ban-Ban**:  Architect - Thread lifecycle management (creation/joining), file I/O for matrix initialization, and Mutex synchronization.
 
-**Kuan, Chin-Wei**: TBD
+**Kuan, Chin-Wei**: Implement `load_max_file`, Verification & QA
 
 **Cheng, Simone**: Safety algorithm (`is_safe()`), request/release logic with rollback on unsafe state.
-
-**TODO**: 
-- Core Safty Algorithm - Implement (`is_safe()`) to determine if a state leads to potential deadlock.
-- Resource request/release logic -  Implement request_resources & release_resources, including the rollback mechanism if a state is deemed unsafe.
-- load_max_file 
-- Verfication
 
 ## 3. Implementation Details
 
@@ -95,7 +89,7 @@ make
 To run the executable (e.g., with 4 resource types and specific instances):
 
 ```bash
-./banker 10 5 7 8
+./banker 11 6 8 9
 ```
 
 ## 5. The Expected and Final Test Results
@@ -108,8 +102,7 @@ The program should output logs showing each customer's request status. For examp
 `Customer 0: Resources released.`
 
 ### Final Results:
-
-*(Place your terminal screenshots here to demonstrate the Banker's Algorithm preventing unsafe allocations)*
+![alt text](snapshot.png)
 
 ## 6. File Structure
 
